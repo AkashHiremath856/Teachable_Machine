@@ -1,0 +1,8 @@
+streamlit==1.22.0
+streamlit_webrtc==0.45.0
+matplotlib==3.7.1
+opencv-python==4.7.0.72
+av==10.0.0
+torch==2.0.1
+facenet_pytorch==2.5.3
+torchvision==0.15.2
