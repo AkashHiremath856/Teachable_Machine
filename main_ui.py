@@ -137,9 +137,9 @@ def home_page():
                 if class_name_ is not None:
                     classes_.append(class_name_)
             # This function is called by the main loop.
-            # if set(classes_) & set(os.listdir('Images/upload')): #intersection--------------------------
-            #     shutil.rmtree('Images/upload')
-            #     os.mkdir("Images/upload")
+            if set(classes_) & set(os.listdir('Images/upload')): #intersection--------------------------
+                shutil.rmtree('Images/upload')
+                os.mkdir("Images/upload")
                 try:
                     os.remove('Artifacts/data.pt')
                 except:
