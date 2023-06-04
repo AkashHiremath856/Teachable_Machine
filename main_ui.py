@@ -37,6 +37,11 @@ def reset():
                 shutil.rmtree('Images/upload')
             except:
                 pass
+            try:
+                shutil.rmtree('Images/.garbage')
+            except:
+                pass
+            
             state.page='home'
             home_page()
 
@@ -77,6 +82,17 @@ def home_page():
                 # Add a class name to the list of classes.
                 if class_name is not None:
                     classes.append(class_name)
+            if set(classes) & set(os.listdir('Images/train')): #intersection
+                shutil.rmtree('Images/train')
+                os.mkdir("Images/train")
+                try:
+                    os.remove('Artifacts/data.pt')
+                except:
+                    pass
+                try:
+                    shutil.rmtree('Images/.garbage')
+                except:
+                    pass
             # Cap the classes in the list of classes.
             for names in classes:
                 cap(names)
@@ -121,6 +137,17 @@ def home_page():
                 if class_name_ is not None:
                     classes_.append(class_name_)
             # This function is called by the main loop.
+            # if set(classes_) & set(os.listdir('Images/upload')): #intersection--------------------------
+            #     shutil.rmtree('Images/upload')
+            #     os.mkdir("Images/upload")
+                try:
+                    os.remove('Artifacts/data.pt')
+                except:
+                    pass
+                try:
+                    shutil.rmtree('Images/.garbage')
+                except:
+                    pass
             if '' not in classes_:
                 # Upload all classes to the server.
                 for names in classes_:
@@ -154,20 +181,7 @@ def train_page():
         file_path='Artifacts/data.pt'
         with open(file_path, 'rb') as file:
             file_contents = file.read()
-        if st.download_button('Export Model',data=file_contents,file_name='model.pt'):
-            st.info("""
-            Code Snippet to use .pt
-
-            checkpoint = torch.load('model.pt')
-
-            model.load_state_dict(checkpoint)
-
-            model.eval()
-
-            output = model(input_data)
-
-            print(output)
-            """)
+        st.download_button('Export Model',data=file_contents,file_name='model.pt')
         # Reset the page to home if the button Reset is pressed
         reset()
 
@@ -226,7 +240,7 @@ def convert_image_to_data_url(image_bytes):
 image_bytes = read_image_file(git_path)
 data_url = convert_image_to_data_url(image_bytes)
 
-st.write(f'<a title="Source Code" href="https://www.github.com" target="blank"><img src="{data_url}" class="icon" alt="Github"></a>', unsafe_allow_html=True)
+st.write(f'<a title="Source Code" href="https://github.com/AkashHiremath856/Teachable_Machine" target="blank"><img src="{data_url}" class="icon" alt="Github"></a>', unsafe_allow_html=True)
 
 # main function for the main module
 if __name__ == "__main__":

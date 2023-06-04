@@ -1,0 +1,2 @@
+Date			Time		Input Mode		Params			Class Size
+2023-06-04	10:01:57	Upload			[128,20,0.5]		{'A': 12, 'B': 12}

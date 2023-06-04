@@ -13,5 +13,8 @@ try:
     shutil.rmtree('Images/upload')
 except:
     pass
-
+try:
+    shutil.rmtree('Images/.garbage')
+except:
+    pass
 os.system('streamlit run main_ui.py')
