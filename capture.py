@@ -6,9 +6,7 @@ from streamlit_webrtc import webrtc_streamer
 import av
 import cv2 as cv
 from datetime import datetime
-import warnings
-
-warnings.filterwarnings("ignore")
+from PIL import Image
 
 
 # ------------------ Preprocessing ------------------#
@@ -27,6 +25,7 @@ class preprocessing:
         if not class_names:
             class_names = os.listdir(self.img_dir)
         self.class_names = class_names
+        self.test_dir='Images/test'
 
     # Class balance
     def class_balance(self):
@@ -58,66 +57,36 @@ class preprocessing:
             if size_ != class_size[max_index]:
                 self.class_balance()
 
-    # def split_images(self):
-    #     # Splitting Images into train,test
-    #     try:
-    #         os.mkdir(self.test_dir)
-    #     except:
-    #         pass
-    #     total_images = len(os.listdir(self.img_dir + "/train/" + self.class_names[0]))
-    #     if os.listdir(self.img_dir + "/test/"):
-    #         for root, dirs, files in os.walk(self.img_dir + "/"):
-    #             print(f"{root}/{len(files)}")
-    #     else:
-    #         choice = random.choices(
-    #             range(total_images), k=int(total_images * 0.2)
-    #         )  # 20% test
-    #         for class_ in self.class_names:
-    #             files = os.listdir(self.train_dir + class_)
-    #             for i in choice:
-    #                 try:
-    #                     shutil.move(
-    #                         self.train_dir + class_ + "/" + files[i],
-    #                         self.test_dir,
-    #                     )
-    #                 except:
-    #                     continue
-    #         st.write("The data split is as follows :")
-    #         for root, dirs, files in os.walk(self.img_dir + "/"):
-    #             st.write(f"{root}/{len(files)}")
-
-
-# ------------------ Preprocess and train ------------------#
-# def train():
-#     """
-#      Trains the class balance if there is more than one class in the images folder. 
-#     """
-#     try:
-#         classes = os.listdir("Images/train")
-#         count = 0
-#         # count of the number of images in the classes
-#         for class_ in classes:
-#             # count of images in the training directory
-#             if os.listdir("Images/train/" + class_):
-#                 count += 1
-
-#         # Preprocessing for the classes in the images folder
-#         if os.listdir("Images/train") > 1:
-#             # Preprocessing for the classes.
-#             if count == len(classes):
-#                 # Preprocessing the image and class balance.
-#                 if st.sidebar.button("Train"):
-#                     img_dir = "Images"
-#                     class_names = os.listdir(img_dir + "/train")
-#                     obj = preprocessing(img_dir, class_names)
-#                     obj.class_balance()
-#     except:
-#         pass
-
+    def split_images(self):
+        # Splitting Images into train,test
+        try:
+            os.mkdir(self.test_dir)
+        except:
+            pass
+        total_images = len(os.listdir(self.img_dir + self.class_names[0]))
+        if os.listdir(self.test_dir):
+            for root, dirs, files in os.walk(self.img_dir + "/"):
+                print(f"{root}/{len(files)}")
+        else:
+            choice = random.choices(
+                range(total_images), k=int(total_images * 0.2)
+            )  # 20% test
+            for class_ in self.class_names:
+                files = os.listdir(self.img_dir + class_)
+                for i in choice:
+                    try:
+                        shutil.move(
+                            self.img_dir + class_ + "/" + files[i],
+                            self.test_dir,
+                        )
+                    except:
+                        continue
+            st.write("The data split is as follows :")
+            for root, dirs, files in os.walk(self.img_dir):
+                st.write(f"Class {root} has {len(files)} Images")
+            st.write(f"Class Images/test/ has {len(os.listdir('Images/test/'))}")
 
 # ------------------ Capture Images ------------------#
-
-
 def cap(cname):
     """
      Capture and store images for a class. This is a streaming function that can be used to capture and store images for a class.
@@ -129,6 +98,7 @@ def cap(cname):
      	 A tuple of ( VideoFrame stream ) where video frame is a video stream and stream is a VideoFrame
     """
     # This function will create a video frame for the given class.
+    image_row=[]
     if cname != "":
         st.title(f"For Class {cname}")
         w_dir = "Images/train/" + cname
@@ -157,3 +127,22 @@ def cap(cname):
             video_frame_callback=video_frame_callback,
             sendback_audio=False,
         )
+        # Create a row of images to be used in the post - processing wizard. This is a copy of the code that was copied from django. contrib. image. service
+        
+        image_row = []
+        for img in os.listdir(f'Images/train/{cname}') :
+            try:
+                image = Image.open(f'Images/train/{cname}/{img}')
+                resized_image = image.resize((100, 100))  # Resize the image to desired width and height
+                image_row.append(resized_image)
+            except:
+                continue
+        if len(os.listdir(f'Images/train/{cname}'))<6 and len(os.listdir(f'Images/train/{cname}'))>=1:
+            st.warning('Add more images to improve models performance. ')
+        nu_=(list(zip(image_row,range(1,len(image_row)+1))))
+        st.image(image_row, width=120,caption=[x[1] for x in nu_])
+
+        if os.listdir(f'Images/train/{cname}'):
+            if st.button('Clear',key=cname+'i'):
+                st.warning('Deleted Images.')
+                shutil.rmtree(f'Images/train/{cname}')

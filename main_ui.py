@@ -1,16 +1,12 @@
 # importing libraries
 import streamlit as st
 import os
-import warnings
 from streamlit import session_state as state
 from capture import preprocessing, cap
 from classify_ui import get_model
 from upload_ import upload,display_info
 import shutil
 import base64
-
-
-warnings.filterwarnings("ignore")
 
 title='Teachable Machine'
 
@@ -22,11 +18,15 @@ def reset():
      
      @param opt - Option to reset or
     """
-    # If opt is true remove artifacts data. pt
     if st.button("Reset"):
             st.warning('Warning: The session will be restarted!.')
+            st.cache_data.clear()
             try:
                 os.remove('Artifacts/data.pt') 
+            except:
+                pass
+            try:
+                shutil.rmtree('Images/test') 
             except:
                 pass
             try:
@@ -45,6 +45,13 @@ def reset():
             state.page='home'
             home_page()
 
+def info(n_classes):
+    if n_classes==1:
+        display_info(n_classes) #About
+        st.write(f'<a title="Source Code" href="https://github.com/AkashHiremath856/Teachable_Machine" target="blank"><img src="{data_url}" class="icon" alt="Github"></a>', unsafe_allow_html=True)
+        st.write(f"<footer class='footer'>© 2023 Teachable Machine™. All rights reserved.</footer>",unsafe_allow_html=True)
+
+
 # ------------------ Web_cam ------------------#
 def home_page():
     """
@@ -57,7 +64,7 @@ def home_page():
     """
     global image_dir
 
-    choice = st.sidebar.radio(label="Choose", options=["Web Cam", "Upload"])
+    choice = st.sidebar.radio(label="Choose", options=["Web Cam", "Upload"],key='train')
     image_dir=None
     # This function is called when the user clicks on the main page.
     # This function is called by the main loop to build the model.
@@ -69,10 +76,9 @@ def home_page():
         st.title(title)
         # ------------------ Streamlit ------------------#
         n_classes = st.sidebar.select_slider("Number of classes", range(1, 10))
-        display_info(n_classes) #About
+        info(n_classes)
 
         # Assign a class name for each class
-        # This function is called by the main loop to build the model.
         if n_classes > 1:
             classes = []
             # Add a class name to the list of classes.
@@ -82,20 +88,21 @@ def home_page():
                 # Add a class name to the list of classes.
                 if class_name is not None:
                     classes.append(class_name)
-            if set(classes) & set(os.listdir('Images/train')): #intersection
-                shutil.rmtree('Images/train')
-                os.mkdir("Images/train")
-                try:
-                    os.remove('Artifacts/data.pt')
-                except:
-                    pass
-                try:
-                    shutil.rmtree('Images/.garbage')
-                except:
-                    pass
+            # if set(classes) & set(os.listdir('Images/train')): #intersection-------------
+            #     shutil.rmtree('Images/train')
+            #     os.mkdir("Images/train")
+            #     try:
+            #         os.remove('Artifacts/data.pt')
+            #     except:
+            #         pass
+            #     try:
+            #         shutil.rmtree('Images/.garbage')
+            #     except:
+            #         pass
             # Cap the classes in the list of classes.
             for names in classes:
-                cap(names)
+                    cap(names)
+
             # if the sidebar button train button is pressed and the sidebar button train button is pressed.
             if (
                 classes == os.listdir("Images/train")
@@ -118,14 +125,14 @@ def home_page():
         st.title(title)
         try:
             os.mkdir("Images/upload")
-            # os.mkdir("Images/test")
+            os.mkdir("Images/test")
         except:
             pass
         k=0
-        n_classes_ = st.sidebar.select_slider("Number of classes", range(1, 10),key='upload')
 
-        display_info(n_classes_)#About
-        
+        n_classes_ = st.sidebar.select_slider("Number of classes", range(1, 10),key='upload')
+        info(n_classes_)
+
         # This function is called by the main loop to generate classes.
         if n_classes_ > 1:
             classes_ = []
@@ -137,17 +144,18 @@ def home_page():
                 if class_name_ is not None:
                     classes_.append(class_name_)
             # This function is called by the main loop.
-            if set(classes_) & set(os.listdir('Images/upload')): #intersection--------------------------
-                shutil.rmtree('Images/upload')
-                os.mkdir("Images/upload")
-                try:
-                    os.remove('Artifacts/data.pt')
-                except:
-                    pass
-                try:
-                    shutil.rmtree('Images/.garbage')
-                except:
-                    pass
+            # if set(classes_) & set(os.listdir('Images/upload')): #intersection--------------------------
+                # shutil.rmtree('Images/test')
+                # shutil.rmtree('Images/upload')
+                # os.mkdir("Images/upload")
+                # try:
+                #     os.remove('Artifacts/data.pt')
+                # except:
+                #     pass
+                # try:
+                #     shutil.rmtree('Images/.garbage')
+                # except:
+                #     pass
             if '' not in classes_:
                 # Upload all classes to the server.
                 for names in classes_:
@@ -165,7 +173,7 @@ def home_page():
                         class_names_ = os.listdir(img_dir)
                         obj2 = preprocessing(img_dir, class_names_)
                         obj2.class_balance()
-                        # obj2.split_images()
+                        obj2.split_images()
                         state.page = "train"
                     reset()
     return choice
@@ -182,8 +190,8 @@ def train_page():
         with open(file_path, 'rb') as file:
             file_contents = file.read()
         st.download_button('Export Model',data=file_contents,file_name='model.pt')
-        # Reset the page to home if the button Reset is pressed
-        reset()
+    # Reset the page to home if the button Reset is pressed
+    reset()
 
 def main():
     """
@@ -196,6 +204,7 @@ def main():
     # This function is called by the user when the page is home or train.
     if state.page == "home":
         tmp=home_page()
+        
         # Write the tmp file to the. tmp. txt file.
         if tmp is not None:
             with open('.tmp.txt','w') as f:
@@ -206,7 +215,6 @@ def main():
 
 #---------------css style-----------------------#
 style = """
-        <footer class='footer'>© 2023 Teachable Machine™. All rights reserved.</footer>
         <style>
         #MainMenu{visibility: hidden;}
         .css-uf99v8,.css-1avcm0n{background-color:black;}
@@ -215,7 +223,7 @@ style = """
         *{font-family: 'Comfortaa'}
         .css-183lzff {font-family: 'Comfortaa'}
         .footer {position: fixed; left: 0; bottom: 0;width: 100%;text-align: center;padding: 20px;}
-       .icon{position: absolute;top: -50px;right: 25px;height:64px;width:64px}
+       .icon{position: absolute;top: -800px;right: 25px;height:64px;width:64px}
         .icon::after {content: attr(title);display: none;position: absolute; top: 100%;left: 50%;transform: translateX(-50%);
         padding: 5px 10px;background-color: black;color: white;font-size: 14px;white-space: nowrap;}
         .icon:hover::after {cursor: pointer; display: block; }
@@ -239,8 +247,6 @@ def convert_image_to_data_url(image_bytes):
 # Read the image file and convert it to a data URL
 image_bytes = read_image_file(git_path)
 data_url = convert_image_to_data_url(image_bytes)
-
-st.write(f'<a title="Source Code" href="https://github.com/AkashHiremath856/Teachable_Machine" target="blank"><img src="{data_url}" class="icon" alt="Github"></a>', unsafe_allow_html=True)
 
 # main function for the main module
 if __name__ == "__main__":

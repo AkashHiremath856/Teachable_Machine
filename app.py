@@ -10,6 +10,10 @@ try:
 except:
     pass
 try:
+    shutil.rmtree('Images/test') 
+except:
+    pass
+try:
     shutil.rmtree('Images/upload')
 except:
     pass

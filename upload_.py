@@ -1,7 +1,9 @@
 import streamlit as st
-import cv2 as cv
 from pathlib import Path 
 import streamlit as st
+import os
+import shutil
+from PIL import Image
 
 def upload(cname,k):
     st.title(f'Class {cname}')
@@ -13,6 +15,25 @@ def upload(cname,k):
             img_=file.getvalue()
             with open(f'{path}/{file.name}','wb') as f:
                 f.write(img_)
+
+    image_row=[]
+    w_dir=f'Images/upload/{cname}/'
+    imgs=os.listdir(w_dir)
+    for img in imgs:
+        image = Image.open(w_dir + img)
+        resized_image = image.resize((100, 100))
+        image_row.append(resized_image)
+
+    if len(os.listdir(f'Images/upload/{cname}'))<9 and len(os.listdir(f'Images/upload/{cname}'))>=1:
+            st.warning('Add more images to improve models performance. ')
+    nu_=(list(zip(image_row,range(1,len(image_row)+1))))
+    st.image(image_row, width=120,caption=[x[1] for x in nu_])
+
+    if os.listdir(f'Images/upload/{cname}'):
+        if st.button('Clear',key=cname+'i'):
+            st.warning('Deleted Images.')
+            shutil.rmtree(f'Images/upload/{cname}')
+            st.cache_data.clear()
 
 # About Teachable Machine
 def display_info(n_classes):

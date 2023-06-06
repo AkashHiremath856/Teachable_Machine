@@ -5,11 +5,6 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 
 
-with open('.tmp.txt','r') as f:
-        path_=f.read()
-        if path_=='Web Cam':
-            path_='train'
-
 class Classifier():
     def __init__(self,image_size,min_face_size,dropout_prob):
         """
@@ -25,6 +20,11 @@ class Classifier():
 
         # initializing resnet for face img to embeding conversion
         self.resnet = InceptionResnetV1(pretrained="vggface2",dropout_prob=dropout_prob).eval()
+
+        with open('.tmp.txt','r') as f:
+            path_=f.read()
+            if path_=='Web Cam':
+                path_='train'
 
         self.dataset = datasets.ImageFolder(f"Images/{path_}")  # photos folder path
 

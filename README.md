@@ -10,7 +10,7 @@ Teachable Machine is a project that enables you to easily train machine learning
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Credits](#credits)
+- [References](#references)
 
 <!--te-->
 
@@ -30,6 +30,8 @@ If you are interested in exploring the source code or contributing to the projec
 git clone https://github.com/AkashHiremath856/Teachable_Machine.git
 ```
 
+<a href='https://datatofish.com/add-python-to-windows-path/' target="_blank">Streamlit not recognized error.</a>
+
 ## Usage
 
 1. After opening the Teachable Machine website, click on "Web Cam" or "Upload" to start.
@@ -48,7 +50,9 @@ git clone https://github.com/AkashHiremath856/Teachable_Machine.git
 
 8. If you are satisfied with your model's performance, you can export it for use in your own applications.
 
-## Credits
+## References
 
-- facenet-pytorch - `https://github.com/timesler/facenet-pytorch`
-- streamlit-webrtc - `https://github.com/whitphx/streamlit-webrtc`
+<ul>
+<li><a href='https://github.com/timesler/facenet-pytorch' target="_blank">facenet-pytorch</a></li>
+<li><a href='https://github.com/whitphx/streamlit-webrtc' target="_blank">streamlit-webrtc<a></li>
+<li><a href='https://teachablemachine.withgoogle.com' target="_blank">teachablemachine</a></li>
