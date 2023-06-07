@@ -4,7 +4,6 @@ import shutil
 import random
 from streamlit_webrtc import webrtc_streamer
 import av
-import cv2 as cv
 from datetime import datetime
 from PIL import Image
 
