@@ -144,6 +144,7 @@ def home_page():
     if choice == "Upload":
         st.title(title)
         try:
+            os.mkdir('Images/train')
             os.mkdir("Images/upload")
             os.mkdir("Images/test")
         except:
@@ -195,20 +196,26 @@ def home_page():
                         k+=1
                         upload(names,str(k))
                 # This function is called when the sidebar button is pressed.
-                if (
-                classes_ == os.listdir("Images/upload")
-                and os.listdir(f"Images/upload/{classes_[-1]}") != []
-                ):
-                    st.sidebar.text("Note: Click all the\nbuttons twice.")
-                    # This function is called when the button is clicked.
-                    if st.sidebar.button("Next", key=names):
-                        img_dir = "Images/upload/"
-                        class_names_ = os.listdir(img_dir)
-                        obj2 = preprocessing(img_dir, class_names_)
-                        obj2.class_balance()
-                        obj2.split_images()
-                        state.page = "train"
-                    reset()
+                try:
+                    if (
+                    classes_ == os.listdir("Images/upload")
+                    and os.listdir(f"Images/upload/{classes_[-1]}") != []
+                    ):
+                        st.sidebar.text("Note: Click all the\nbuttons twice.")
+                        # This function is called when the button is clicked.
+                        if st.sidebar.button("Next", key=names):
+                            img_dir = "Images/upload/"
+                            class_names_ = os.listdir(img_dir)
+                            obj2 = preprocessing(img_dir, class_names_)
+                            obj2.class_balance()
+                            obj2.split_images()
+                            state.page = "train"
+                        reset()
+                except:
+                    try:
+                        os.mkdir("Images/upload")
+                    except:
+                        pass
     return choice
 
 
