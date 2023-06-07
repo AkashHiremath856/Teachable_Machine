@@ -75,6 +75,10 @@ def get_model():
     # train_model if data. pt is not in os. listdir artifacts
     if "data.pt" not in os.listdir("Artifacts"):
         st.title("Train Model on Classes")
+        with open('.tmp.txt','r') as f:
+            path_=f.read()
+            if path_=='Web Cam':
+                path_='train'
         classes=os.listdir(f'Images/{path_}')
         if classes==[]:
             st.experimental_rerun()
