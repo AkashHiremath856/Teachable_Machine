@@ -49,6 +49,10 @@ def reset():
                 shutil.rmtree('Images/.garbage')
             except:
                 pass
+            try:
+                os.remove('Images/test.zip') 
+            except:
+                pass
             
             state.page='home'
             home_page()
@@ -91,64 +95,73 @@ def home_page():
         # Assign a class name for each class
         if n_classes > 1:
             classes = []
+            if os.listdir(f'Images/train/'):
+                cls_=os.listdir(f'Images/train/')[0]
+                if  os.listdir(f'Images/train/{cls_}')!=[]:
+                    if st.button('End Prev Session'):
+                        try:
+                            os.remove('Artifacts/data.pt') 
+                        except:
+                            pass
+                        try:
+                            shutil.rmtree('Images/test') 
+                        except:
+                            pass
+                        try:
+                            shutil.rmtree('Images/upload') 
+                        except:
+                            pass
+                        try:
+                            os.remove('Images/test.zip') 
+                        except:
+                            pass
+                        try:
+                            shutil.rmtree('Images/train')
+                            os.mkdir('Images/train')
+                        except:
+                            pass
+                        try:
+                            shutil.rmtree('Images/.garbage')
+                        except:
+                            pass
+                        try:
+                            os.remove('Images/test.zip') 
+                        except:
+                            pass
+                
             # Add a class name to the list of classes.
             for _ in range(n_classes):
                 txt = "Assign a class name for class " + str(_ + 1)
                 class_name = st.sidebar.text_input(txt)
                 # Add a class name to the list of classes.
                 if class_name is not None:
-                    classes.append(class_name)
-            if set(classes) & set(os.listdir('Images/upload')): #intersection--------------------------
-                try:
-                    shutil.rmtree('Images/train')
-                except:
-                    pass
-                try:
-                    os.mkdir("Images/train")
-                except:
-                    pass
-                try:
-                    os.remove('Artifacts/data.pt')
-                except:
-                    pass
-                try:
-                    shutil.rmtree('Images/test')
-                except:
-                    pass
-                try:
-                    shutil.rmtree('Images/.garbage')
-                except:
-                    pass
-                try:
-                    os.remove('Images/test.zip') 
-                except:
-                    pass
+                    classes.append(class_name)             
             # Cap the classes in the list of classes.
             for names in classes:
                     cap(names)
-
-            # if the sidebar button train button is pressed and the sidebar button train button is pressed.
-            if (
-                classes == os.listdir("Images/train")
-                and os.listdir(f"Images/train/{classes[-1]}") != []
-            ):
-                st.sidebar.text("Note: Click all the\nbuttons twice.")
-                # This function is called when the button is clicked.
-                if st.sidebar.button("Next", key=names):
-                    img_dir = "Images/train/"
-                    class_names_ = os.listdir(img_dir)
-                    obj2 = preprocessing(img_dir, class_names_)
-                    obj2.class_balance()
-                    obj2.split_images()
-                    state.page = "train"
-                reset()
-    
+            
+            if classes !=[]:
+                # if the sidebar button train button is pressed and the sidebar button train button is pressed.
+                if (
+                    classes == os.listdir("Images/train")
+                    and os.listdir(f"Images/train/{classes[-1]}") != []
+                ):
+                    st.sidebar.text("Note: Click all the\nbuttons twice.")
+                    # This function is called when the button is clicked.
+                    if st.sidebar.button("Next", key=names):
+                        img_dir = "Images/train/"
+                        class_names_ = os.listdir(img_dir)
+                        obj2 = preprocessing(img_dir, class_names_)
+                        obj2.class_balance()
+                        obj2.split_images()
+                        state.page = "train"
+                    reset()
+            
 
     # This function is called when the user clicks on the upload button.
     if choice == "Upload":
         st.title(title)
         try:
-            os.mkdir('Images/train')
             os.mkdir("Images/upload")
             os.mkdir("Images/test")
         except:

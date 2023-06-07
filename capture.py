@@ -126,8 +126,9 @@ def cap(cname):
             img = frame.to_ndarray(format="bgr24")
             tim = datetime.now().time().second
             nam = f"Images/train/{cname}/frame_{str(tim)}.jpg"
-            cv.imwrite(nam, img)
-            return av.VideoFrame.from_ndarray(img, format="bgr24")
+            im = Image.fromarray(img.astype('uint8'), 'RGB')
+            im.save(nam)
+            return av.VideoFrame.from_ndarray(img, format="bgr24") #------------------
 
         webrtc_streamer(
             key=f"{cname}_1",
