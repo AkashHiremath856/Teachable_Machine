@@ -7,10 +7,14 @@ from classify_ui import get_model
 from upload_ import upload,display_info
 import shutil
 import base64
+from pathlib import Path
 
 title='Teachable Machine'
 
 st.set_page_config(page_title=title, page_icon='Artifacts/pytorch.png',initial_sidebar_state='auto')
+
+img_dir=Path('Images')
+img_dir.mkdir(exist_ok=True)
 
 def reset():
     """
