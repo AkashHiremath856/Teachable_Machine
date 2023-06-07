@@ -81,10 +81,10 @@ class preprocessing:
                         )
                     except:
                         continue
-            st.write("The data split is as follows :")
-            for root, dirs, files in os.walk(self.img_dir):
-                st.write(f"Class {root} has {len(files)} Images")
-            st.write(f"Class Images/test/ has {len(os.listdir('Images/test/'))}")
+            # st.write("The data split is as follows :")
+            # for root, dirs, files in os.walk(self.img_dir):
+            #     st.write(f"Class {root} has {len(files)} Images")
+            # st.write(f"Class Images/test/ has {len(os.listdir('Images/test/'))}")
 
 # ------------------ Capture Images ------------------#
 def cap(cname):
@@ -137,7 +137,7 @@ def cap(cname):
                 image_row.append(resized_image)
             except:
                 continue
-        if len(os.listdir(f'Images/train/{cname}'))<6 and len(os.listdir(f'Images/train/{cname}'))>=1:
+        if len(os.listdir(f'Images/train/{cname}'))<8 and len(os.listdir(f'Images/train/{cname}'))>=1:
             st.warning('Add more images to improve models performance. ')
         nu_=(list(zip(image_row,range(1,len(image_row)+1))))
         st.image(image_row, width=120,caption=[x[1] for x in nu_])

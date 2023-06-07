@@ -9,12 +9,17 @@ import datetime
 import shutil
 
 def log(classes,image_size,min_face_size,dropout_prob):
+    with open('.tmp.txt','r') as f:
+        path_=f.read()
+        if path_=='Web Cam':
+            path_='train'
+
     with open('.tmp.txt','r') as mode:
         mode_=f'\t{mode.read()}'
 
     tree_={}
     for class_ in classes:
-         tree_[class_]=len(os.listdir(f'Images/{class_}'))
+         tree_[class_]=len(os.listdir(f'Images/{path_}/{class_}'))
 
     tree_=f'\t\t{tree_}'
 
@@ -118,9 +123,10 @@ def get_model():
                 video_frame_callback=video_frame_callback,
                 sendback_audio=False,
             )
-
+            
             fig_place = st.sidebar.empty()
             fig, ax = plt.subplots(1, 1)
+            k=0
 
             # Plot the face match of the image.
             while ctx.state.playing:
@@ -153,6 +159,7 @@ def get_model():
                     ax.set_title(f"Class - {res[0]} with distance = {res_:.5f})")
                     fig_place.pyplot(fig)
 
+
         if choice_=='Upload':
 
             def rm_():
@@ -177,7 +184,7 @@ def get_model():
                             f.write(img_)                
             
 
-            uploaded_files=st.file_uploader("Can choose the images from `./Images/test/` directory.", type=["jpg", "png", "jpeg"],accept_multiple_files=True,key='test_upload')
+            uploaded_files=st.file_uploader("Can choose the images from `test.zip`.", type=["jpg", "png", "jpeg"],accept_multiple_files=True,key='test_upload')
             if uploaded_files:
                 rm_()
                 for file in uploaded_files:
@@ -200,3 +207,10 @@ def get_model():
                     
                 else:
                     re_upload()
+
+            if 'test' in os.listdir('Images/'):
+                shutil.make_archive('Images/test','zip','Images/test')
+                file_path='Images/test.zip'
+                with open(file_path, 'rb') as file:
+                    file_contents = file.read()
+                st.download_button('Download Test Images',data=file_contents,file_name='test_imgs.zip')

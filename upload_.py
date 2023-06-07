@@ -24,7 +24,7 @@ def upload(cname,k):
         resized_image = image.resize((100, 100))
         image_row.append(resized_image)
 
-    if len(os.listdir(f'Images/upload/{cname}'))<9 and len(os.listdir(f'Images/upload/{cname}'))>=1:
+    if len(os.listdir(f'Images/upload/{cname}'))<8 and len(os.listdir(f'Images/upload/{cname}'))>=1:
             st.warning('Add more images to improve models performance. ')
     nu_=(list(zip(image_row,range(1,len(image_row)+1))))
     st.image(image_row, width=120,caption=[x[1] for x in nu_])
