@@ -6,4 +6,3 @@ av
 torch
 facenet_pytorch
 torchvision
-opencv-python-headless

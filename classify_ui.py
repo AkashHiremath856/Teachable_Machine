@@ -9,8 +9,17 @@ import datetime
 import shutil
 
 def log(classes,image_size,min_face_size,dropout_prob):
+    """
+     Log information about the training and evaluation. This is used to generate log files for the model and the data to be used in the test
+     
+     @param classes - List of classes that are in the training set
+     @param image_size - Size of the image in pixels.
+     @param min_face_size - Minimum face size to be considered
+     @param dropout_prob - Probability of dropping an
+    """
     with open('.tmp.txt','r') as f:
         path_=f.read()
+        # path_ Web Cam train path_ train
         if path_=='Web Cam':
             path_='train'
 
@@ -18,6 +27,7 @@ def log(classes,image_size,min_face_size,dropout_prob):
         mode_=f'\t{mode.read()}'
 
     tree_={}
+    # Returns the number of images in the classes.
     for class_ in classes:
          tree_[class_]=len(os.listdir(f'Images/{path_}/{class_}'))
 
@@ -30,6 +40,7 @@ def log(classes,image_size,min_face_size,dropout_prob):
 
     header_='Date\t\t\tTime\t\tInput Mode\t\tParams\t\t\tClass Size'
 
+    # If logs. txt is not in os. listdir os. listdir logs. txt
     if 'logs.txt' not in os.listdir():
             data_=header_+data_
 

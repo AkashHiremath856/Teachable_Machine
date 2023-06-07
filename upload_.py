@@ -6,11 +6,19 @@ import shutil
 from PIL import Image
 
 def upload(cname,k):
+    """
+     Upload images to class'cname'and return a list of images. This is a wrapper around st. file_uploader and does not check for errors
+     
+     @param cname - name of class to upload images to
+     @param k - number of images to upload to class e. g
+    """
     st.title(f'Class {cname}')
     path=Path(f'Images/upload/{cname}')
     path.mkdir(exist_ok=True)
     uploaded_files=st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"],accept_multiple_files=True,key=str(k)+cname)
+    # Writes the uploaded images to the file.
     if uploaded_files:
+        # Write the images to the file.
         for file in uploaded_files:
             img_=file.getvalue()
             with open(f'{path}/{file.name}','wb') as f:
@@ -19,17 +27,21 @@ def upload(cname,k):
     image_row=[]
     w_dir=f'Images/upload/{cname}/'
     imgs=os.listdir(w_dir)
+    # resize the images to 100 pixels
     for img in imgs:
         image = Image.open(w_dir + img)
         resized_image = image.resize((100, 100))
         image_row.append(resized_image)
 
+    # Add more images to improve models performance.
     if len(os.listdir(f'Images/upload/{cname}'))<8 and len(os.listdir(f'Images/upload/{cname}'))>=1:
             st.warning('Add more images to improve models performance. ')
     nu_=(list(zip(image_row,range(1,len(image_row)+1))))
     st.image(image_row, width=120,caption=[x[1] for x in nu_])
 
+    # Delete all images in the cache.
     if os.listdir(f'Images/upload/{cname}'):
+        # Clear the cache data.
         if st.button('Clear',key=cname+'i'):
             st.warning('Deleted Images.')
             shutil.rmtree(f'Images/upload/{cname}')
@@ -37,6 +49,12 @@ def upload(cname,k):
 
 # About Teachable Machine
 def display_info(n_classes):
+            """
+             Displays information about Teachable Machine. This is a function to be called from the GUI and should not be called externally
+             
+             @param n_classes - number of classes to
+            """
+            # if n_classes 1 print out the text
             if n_classes<=1:
                 st.text("""
             With Teachable Machine, you can train a model to recognize and classify different 

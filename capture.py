@@ -58,21 +58,28 @@ class preprocessing:
                 self.class_balance()
 
     def split_images(self):
+        """
+         Split images into train and test. This is done by picking a random number of images from the set of images to be
+        """
         # Splitting Images into train,test
         try:
             os.mkdir(self.test_dir)
         except:
             pass
         total_images = len(os.listdir(self.img_dir + self.class_names[0]))
+        # Move images from the test directory to the test directory.
         if os.listdir(self.test_dir):
+            # Print out the number of files in the image directory.
             for root, dirs, files in os.walk(self.img_dir + "/"):
                 print(f"{root}/{len(files)}")
         else:
             choice = random.choices(
                 range(total_images), k=int(total_images * 0.2)
             )  # 20% test
+            # Move all classes in the class_names to the test_dir
             for class_ in self.class_names:
                 files = os.listdir(self.img_dir + class_)
+                # Move all files in choice to the test directory
                 for i in choice:
                     try:
                         shutil.move(
