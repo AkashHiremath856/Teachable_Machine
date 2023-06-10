@@ -8,54 +8,63 @@ from upload_ import upload,display_info
 import shutil
 import base64
 from pathlib import Path
+import datetime
+
 
 title='Teachable Machine'
 
 st.set_page_config(page_title=title, page_icon='Artifacts/pytorch.png',initial_sidebar_state='auto')
 
+session_timeout=[-2,-1,0,1,2]
+
 img_dir=Path('Images')
 img_dir.mkdir(exist_ok=True)
 
-def reset():
+
+def reset(i=0):
     """
      Remove files and directories if opt is None or button " Reset " is pressed. This is useful for debugging the program
      
      @param opt - Option to reset or
     """
     if st.button("Reset"):
-            st.warning('Warning: The session will be restarted!.')
-            st.cache_data.clear()
-            try:
-                os.remove('Artifacts/data.pt') 
-            except:
-                pass
-            try:
-                shutil.rmtree('Images/test') 
-            except:
-                pass
-            try:
-                os.remove('Images/test.zip') 
-            except:
-                pass
-            try:
-                shutil.rmtree('Images/train')
-            except:
-                pass
-            try:
-                shutil.rmtree('Images/upload')
-            except:
-                pass
-            try:
-                shutil.rmtree('Images/.garbage')
-            except:
-                pass
-            try:
-                os.remove('Images/test.zip') 
-            except:
-                pass
-            
-            state.page='home'
-            home_page()
+                st.warning('Warning: The session will be restarted!.')
+                st.cache_data.clear()
+
+                try:
+                    os.remove('Artifacts/data.pt') 
+                except:
+                    pass
+                try:
+                    shutil.rmtree('Images/test') and os.mkdir('Images/test') 
+                except:
+                    pass
+                try:
+                    os.remove('Images/test.zip') 
+                except:
+                    pass
+                try:
+                    shutil.rmtree('Images/train') and os.mkdir('Images/train')
+                except:
+                    pass
+                try:
+                    shutil.rmtree('Images/upload') and os.mkdir('Images/upload')
+                except:
+                    pass
+                try:
+                    shutil.rmtree('Images/.garbage') and os.mkdir('Images/.garbage')
+                except:
+                    pass
+                try:
+                    os.remove('Images/test.zip') 
+                except:
+                    pass
+                
+                if i!=0:
+                    pass
+                else:
+                    state.page='home'
+                    home_page(i)
 
 def info(n_classes):
     if n_classes==1:
@@ -63,9 +72,8 @@ def info(n_classes):
         st.write(f'<a title="Source Code" href="https://github.com/AkashHiremath856/Teachable_Machine" target="blank"><img src="{data_url}" class="icon" alt="Github"></a>', unsafe_allow_html=True)
         st.write(f"<footer class='footer'>© 2023 Teachable Machine™. All rights reserved.</footer>",unsafe_allow_html=True)
 
-
 # ------------------ Web_cam ------------------#
-def home_page():
+def home_page(i):
     """
      This function is called when the user clicks on the home page. It creates the folder and selects 
      the number of classes. Streamlit is a dialog for choosing the number of classes to assign a 
@@ -75,18 +83,13 @@ def home_page():
      it returns
     """
     global image_dir
+    global n_classes
 
-    choice = st.sidebar.radio(label="Choose", options=["Web Cam", "Upload"],key='train')
+    choice = st.sidebar.radio(label="Choose", options=["Web Cam", "Upload"],key='train'+str(i))
     image_dir=None
     # This function is called when the user clicks on the main page.
     # This function is called by the main loop to build the model.
     if choice == "Web Cam":
-        try:
-            os.mkdir('Images/train')
-            os.mkdir("Images/upload")
-            os.mkdir("Images/test")
-        except:
-            pass
         st.title(title)
         # ------------------ Streamlit ------------------#
         n_classes = st.sidebar.select_slider("Number of classes", range(1, 10))
@@ -95,40 +98,20 @@ def home_page():
         # Assign a class name for each class
         if n_classes > 1:
             classes = []
-            if os.listdir(f'Images/train/'):
+            # Create the training images if they don't exist. This is called after the session is created
+            if 'train' not in os.listdir('Images'):
+                os.mkdir('Images/train')
+            if os.listdir(f'Images/train/')!=[]:
                 cls_=os.listdir(f'Images/train/')[0]
-                if  os.listdir(f'Images/train/{cls_}')!=[]:
-                    if st.button('End Prev Session'):
-                        try:
-                            os.remove('Artifacts/data.pt') 
-                        except:
-                            pass
-                        try:
-                            shutil.rmtree('Images/test') 
-                        except:
-                            pass
-                        try:
-                            shutil.rmtree('Images/upload') 
-                        except:
-                            pass
-                        try:
-                            os.remove('Images/test.zip') 
-                        except:
-                            pass
-                        try:
-                            shutil.rmtree('Images/train')
-                            os.mkdir('Images/train')
-                        except:
-                            pass
-                        try:
-                            shutil.rmtree('Images/.garbage')
-                        except:
-                            pass
-                        try:
-                            os.remove('Images/test.zip') 
-                        except:
-                            pass
-                
+                if os.listdir(f'Images/train/{cls_}')!=[]:
+                    l_file=os.listdir(f'Images/train/{cls_}')[0]
+                    m_time=os.path.getmtime(f'Images/train/{cls_}/{l_file}')
+                    m_minute=datetime.datetime.fromtimestamp(m_time).minute
+                    diff_=datetime.datetime.now().minute-m_minute
+                    if diff_ not in session_timeout:
+                        st.warning('Please End Previous Session first.')
+                        reset(44)
+
             # Add a class name to the list of classes.
             for _ in range(n_classes):
                 txt = "Assign a class name for class " + str(_ + 1)
@@ -161,11 +144,6 @@ def home_page():
     # This function is called when the user clicks on the upload button.
     if choice == "Upload":
         st.title(title)
-        try:
-            os.mkdir("Images/upload")
-            os.mkdir("Images/test")
-        except:
-            pass
 
         n_classes_ = st.sidebar.select_slider("Number of classes", range(1, 10),key='upload')
         info(n_classes_)
@@ -182,31 +160,19 @@ def home_page():
                 if class_name_ is not None:
                     classes_.append(class_name_)
             # This function is called by the main loop.
-            if set(classes_) & set(os.listdir('Images/upload')): #intersection--------------------------
-                try:
-                    shutil.rmtree('Images/test')
-                except:
-                    pass
-                try:
-                    shutil.rmtree('Images/upload')
-                except:
-                    pass
-                try:
-                    os.mkdir("Images/upload")
-                except:
-                    pass
-                try:
-                    os.remove('Artifacts/data.pt')
-                except:
-                    pass
-                try:
-                    shutil.rmtree('Images/.garbage')
-                except:
-                    pass
-                try:
-                    os.remove('Images/test.zip') 
-                except:
-                    pass
+            if 'upload' not in os.listdir('Images'):
+                os.mkdir('Images/upload')
+            if os.listdir(f'Images/upload/')!=[]:
+                cls_=os.listdir(f'Images/upload/')[0]
+                if os.listdir(f'Images/upload/{cls_}')!=[]:
+                    l_file=os.listdir(f'Images/upload/{cls_}')[0]
+                    m_time=os.path.getmtime(f'Images/upload/{cls_}/{l_file}')
+                    m_minute=datetime.datetime.fromtimestamp(m_time).minute
+                    diff_u=datetime.datetime.now().minute-m_minute
+                    if diff_u not in session_timeout:
+                        reset(78)
+                        st.warning('Please End Previous Session first.')
+
             if '' not in classes_:
                 # Upload all classes to the server.
                 for names in classes_:
@@ -227,7 +193,6 @@ def home_page():
                             obj2.class_balance()
                             obj2.split_images()
                             state.page = "train"
-                        reset()
                 except:
                     try:
                         os.mkdir("Images/upload")
@@ -254,13 +219,15 @@ def main():
     """
      Main function of the program. If there is no page in the state it will default to home. Otherwise it will call the appropriate function
     """
+    i=0
     # Set the page to home.
     if "page" not in state:
         state.page = "home"
 
     # This function is called by the user when the page is home or train.
     if state.page == "home":
-        tmp=home_page()
+        i+=1
+        tmp=home_page(i)
         
         # Write the tmp file to the. tmp. txt file.
         if tmp is not None:
@@ -280,10 +247,11 @@ style = """
         *{font-family: 'Comfortaa'}
         .css-183lzff {font-family: 'Comfortaa'}
         .footer {position: fixed; left: 0; bottom: 0;width: 100%;text-align: center;padding: 20px;}
-       .icon{position: absolute;top: -800px;right: 25px;height:64px;width:64px}
+       .icon{position: absolute;top: -800px;right: 50px;height:64px;width:64px}
         .icon::after {content: attr(title);display: none;position: absolute; top: 100%;left: 50%;transform: translateX(-50%);
         padding: 5px 10px;background-color: black;color: white;font-size: 14px;white-space: nowrap;}
         .icon:hover::after {cursor: pointer; display: block; }
+        .css-183lzff{font-size:16px}
         </style>
         """
 st.markdown(style, unsafe_allow_html=True)

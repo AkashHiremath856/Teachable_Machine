@@ -6,6 +6,7 @@ from streamlit_webrtc import webrtc_streamer
 import av
 from datetime import datetime
 from PIL import Image
+import cv2 as cv
 
 
 # ------------------ Preprocessing ------------------#
@@ -109,7 +110,7 @@ def cap(cname):
         st.title(f"For Class {cname}")
         w_dir = "Images/train/" + cname
         # Create a directory for the training directory if it doesn t exist.
-        if cname not in os.listdir("Images/train/"):
+        if 'train' in os.listdir("Images/") and  cname not in os.listdir("Images/train/"):
             os.makedirs(w_dir)
 
         def video_frame_callback(frame):
@@ -125,9 +126,8 @@ def cap(cname):
             img = frame.to_ndarray(format="bgr24")
             tim = datetime.now().time().second
             nam = f"Images/train/{cname}/frame_{str(tim)}.jpg"
-            im = Image.fromarray(img.astype('uint8'), 'RGB')
-            im.save(nam)
-            return av.VideoFrame.from_ndarray(img, format="bgr24") #------------------
+            cv.imwrite(nam,img)
+            return av.VideoFrame.from_ndarray(img, format="bgr24") 
 
         webrtc_streamer(
             key=f"{cname}_1",

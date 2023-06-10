@@ -13,6 +13,8 @@ def upload(cname,k):
      @param k - number of images to upload to class e. g
     """
     st.title(f'Class {cname}')
+    if 'upload' not in os.listdir('Images'):
+        os.mkdir('Images/upload')
     path=Path(f'Images/upload/{cname}')
     path.mkdir(exist_ok=True)
     uploaded_files=st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"],accept_multiple_files=True,key=str(k)+cname)

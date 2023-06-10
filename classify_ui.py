@@ -141,7 +141,6 @@ def get_model():
             
             fig_place = st.sidebar.empty()
             fig, ax = plt.subplots(1, 1)
-            k=0
 
             # Plot the face match of the image.
             while ctx.state.playing:
