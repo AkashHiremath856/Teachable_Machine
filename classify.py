@@ -16,10 +16,13 @@ class Classifier():
         """
         self.data_path = "Artifacts/data.pt"
 
-        self.mtcnn = MTCNN(image_size=image_size, margin=0, min_face_size=min_face_size)
+        self.device='cuda' if torch.cuda.is_available() else 'cpu'
+
+        # initializing Multi-Task Cascaded Convolutional Neural Network
+        self.mtcnn = MTCNN(image_size=image_size, margin=0, min_face_size=min_face_size,device=self.device)
 
         # initializing resnet for face img to embeding conversion
-        self.resnet = InceptionResnetV1(pretrained="vggface2",dropout_prob=dropout_prob).eval()
+        self.resnet = InceptionResnetV1(pretrained="vggface2",dropout_prob=dropout_prob).to(self.device).eval()
 
         with open('.tmp.txt','r') as f:
             path_=f.read()
@@ -52,16 +55,18 @@ class Classifier():
             face, prob = self.mtcnn(img, return_prob=True)
             # if face is not None and prob 0. 90 and porbability 90% then the face is cropped to a resnet model and porbability 90%
             if face is not None and prob > 0.90:  # if face detected and porbability > 90%
+                face=face.to(self.device)
+                idx=torch.tensor(idx)
+                idx=idx.to(self.device)
                 emb = self.resnet(
                     face.unsqueeze(0)
                 )  # passing cropped face into resnet model to get embedding matrix
                 embedding_list.append(
                     emb.detach()
                 )  # resulten embedding matrix is stored in a list
-                name_list.append(idx_to_class[idx])  # names are stored in a list
+                name_list.append(idx_to_class[idx.item()])  # names are stored in a list
 
         # save
-
         data = [embedding_list, name_list]
         torch.save(data, self.data_path)  # saving data.pt file
 
@@ -79,6 +84,7 @@ class Classifier():
         face, prob = self.mtcnn(img, return_prob=True)  # returns cropped face and probability
         # returns a tuple of name_list min distance distance for each person in the embedding data.
         if face != None:
+            face=face.to(self.device)
             emb =self.resnet(
                 face.unsqueeze(0)
             ).detach()  # detech is to make required gradient false
