@@ -1,106 +1,257 @@
-# importing libraries
-from facenet_pytorch import MTCNN, InceptionResnetV1
+import gc
+import os
 import torch
-from torchvision import datasets
+import torch.nn as nn
 from torch.utils.data import DataLoader
+from torchvision.datasets import ImageFolder
+from torchvision.transforms import Compose, transforms
+import torchvision.models as models
+from sklearn import svm
+import streamlit as st
+import numpy as np
+from skimage.io import imread
+from skimage.transform import resize
+import cv2
+from sklearn.metrics import accuracy_score
+import pickle
 
 
-class Classifier():
-    def __init__(self,image_size,min_face_size,dropout_prob):
-        """
-         Initialize MTCNN ResNeXt and InceptionResnet for face img to embeding conversion
-         
-         @param image_size - size of image used for mtcnn
-         @param min_face_size - minimum face size used for resnet
-         @param dropout_prob - probability of embedding of face img to
-        """
-        self.data_path = "Artifacts/data.pt"
-
-        self.device='cuda' if torch.cuda.is_available() else 'cpu'
-
-        # initializing Multi-Task Cascaded Convolutional Neural Network
-        self.mtcnn = MTCNN(image_size=image_size, margin=0, min_face_size=min_face_size,device=self.device)
-
-        # initializing resnet for face img to embeding conversion
-        self.resnet = InceptionResnetV1(pretrained="vggface2",dropout_prob=dropout_prob).to(self.device).eval()
-
-        with open('.tmp.txt','r') as f:
-            path_=f.read()
-            if path_=='Web Cam':
-                path_='train'
-
-        self.dataset = datasets.ImageFolder(f"Images/{path_}")  # photos folder path
+# ----------------------ML model trainning--------------------------------
+def heq(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # _Convert_to_HSV_colorspace
+    hsv[:, :, 2] = cv2.equalizeHist(hsv[:, :, 2])
+    Meq_color = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+    return Meq_color
 
 
-    def train_model(self):
-        """
-        Train resnet model to classify photos and peoples. Args : dataset : dataset class_to_idx : mapping from class id to
-        """
-        # initializing mtcnn for face detection
+def tranform_image(DATA_DIR):
+    target = []
+    images = []
+    flatten_data = []
 
-        idx_to_class = {
-            i: c for c, i in self.dataset.class_to_idx.items()
-        }  # accessing names of peoples from folder names
+    CATEGORIES = os.listdir(DATA_DIR)
 
-        loader = DataLoader(self.dataset, collate_fn=lambda X: X[0])
+    for categories in CATEGORIES:
+        class_num = CATEGORIES.index(categories)  # label encoding
+        path = os.path.join(DATA_DIR, categories)
+        for img in os.listdir(path):
+            img_array = imread(os.path.join(path, img))
+            img_array = heq(img_array)
+            img_resized = resize(img_array, (160, 160, 3))
+            flatten_data.append(img_resized.flatten())  # Normalizes values
+            images.append(img_resized)
+            target.append(class_num)
 
-        face_list = []  # list of cropped faces from photos folder
-        name_list = []  # list of names corrospoing to cropped photos
-        embedding_list = (
-            []
-        )  # list of embeding matrix after conversion from cropped faces to embedding matrix using resnet
+    flatten_data = np.array(flatten_data)
+    target = np.array(target)
+    images = np.array(images)
 
-        # returns the embedding matrix for each face in the loader
-        for img, idx in loader:
-            face, prob = self.mtcnn(img, return_prob=True)
-            # if face is not None and prob 0. 90 and porbability 90% then the face is cropped to a resnet model and porbability 90%
-            if face is not None and prob > 0.90:  # if face detected and porbability > 90%
-                face=face.to(self.device)
-                idx=torch.tensor(idx)
-                idx=idx.to(self.device)
-                emb = self.resnet(
-                    face.unsqueeze(0)
-                )  # passing cropped face into resnet model to get embedding matrix
-                embedding_list.append(
-                    emb.detach()
-                )  # resulten embedding matrix is stored in a list
-                name_list.append(idx_to_class[idx.item()])  # names are stored in a list
-
-        # save
-        data = [embedding_list, name_list]
-        torch.save(data, self.data_path)  # saving data.pt file
+    return flatten_data, target
 
 
-    def face_match(self,img):
-        """
-        Match a face to the person. This is a wrapper around mtcnn to return the face and the prob of the match
-        
-        Args:
-            img: image to be matched to person
-        
-        Returns: 
-            tuple of name and distance of the face in the image as a tuple ( name distance ) or None if no
-        """
-        face, prob = self.mtcnn(img, return_prob=True)  # returns cropped face and probability
-        # returns a tuple of name_list min distance distance for each person in the embedding data.
-        if face != None:
-            face=face.to(self.device)
-            emb =self.resnet(
-                face.unsqueeze(0)
-            ).detach()  # detech is to make required gradient false
+def build_ml_model():
+    with open('.tmp.txt','r') as f:
+        path_=f.read()
+        if path_=='Web Cam':
+            path_='train'
+    X_train,y_train=tranform_image(f'Images/{path_}')
+    X_test,y_test=tranform_image('Images/test')
+    model = svm.SVC(C=100, class_weight=None, gamma="auto", kernel="rbf", probability=True)
+    model.fit(X_train,y_train)
+    y_pred=model.predict(X_test)
+    acc=accuracy_score(y_test,y_pred)
+    if 'data.pkl' not in os.listdir('Artifacts'):
+        pickle.dump(model,open('Artifacts/data.pkl','wb'))
+    return acc*100
 
-            saved_data = torch.load(self.data_path)  # loading data.pt file
-            embedding_list = saved_data[0]  # getting embedding data
-            name_list = saved_data[1]  # getting list of names
-            dist_list = (
-                []
-            )  # list of matched distances, minimum distance is used to identify the person
 
-            # Add a dist to the list of embedding distributions.
-            for idx, emb_db in enumerate(embedding_list):
-                dist = torch.dist(emb, emb_db).item()
-                dist_list.append(dist)
+#------------------------------trainning DL model---------------------
 
-            idx_min = dist_list.index(min(dist_list))
-            return (name_list[idx_min], min(dist_list))
+class VGG19(nn.Module):
+    def __init__(self, num_classes):
+        super(VGG19, self).__init__()
+        self.vgg19 = models.vgg19(weights=models.vgg.VGG19_Weights.DEFAULT)
+        num_features = self.vgg19.classifier[6].in_features
+        self.vgg19.classifier[6] = nn.Linear(num_features, num_classes)
 
+    def forward(self, x):
+        x = self.vgg19(x)
+        return x
+
+def build_model(num_epochs,lr):
+
+    def test_model(model, test_loader, criterion):
+        model.eval()  # Set the model to evaluation mode
+        device = (
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )  # Get the device of the model parameters
+        total_loss = 0.0
+        total_correct = 0
+        total_samples = 0
+
+        with torch.no_grad():
+            for inputs, labels in test_loader:
+                model = model.to(device)
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                _, predicted = torch.max(outputs, 1)
+
+                total_loss += loss.item() * inputs.size(0)
+                total_correct += (predicted == labels).sum().item()
+                total_samples += inputs.size(0)
+
+        average_loss = total_loss / total_samples
+        accuracy = (total_correct / total_samples) * 100.0
+        return average_loss, accuracy
+
+
+    def train_and_test(model, train_loader, test_loader, criterion, optimizer, num_epochs):
+        device = (
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )  # Get the device of the model parameters
+
+        global average_loss
+        global test_loss
+        global test_acc
+        global accuracy
+        global epoch
+
+        #progress bar
+        progress_text = "Training... Please wait."
+        bar=st.progress(0, text=progress_text)
+
+        for epoch in range(1,num_epochs+1):
+            torch.cuda.empty_cache()
+            gc.collect()
+            model.train()  # Set the model to training mode
+            total_loss = 0.0
+            total_correct = 0
+            total_samples = 0
+
+            for inputs, labels in train_loader:
+                model = model.to(device)
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                optimizer.zero_grad()  # Clear the gradients
+
+                try:
+                    outputs = model(inputs)
+                except:
+                    inputs = inputs.squeeze(dim=0)
+                    outputs = model(inputs)
+
+                try:
+                    loss = criterion(outputs.logits, labels)
+                except:
+                    loss = criterion(outputs, labels)
+
+                try:
+                    _, predicted = torch.max(outputs, 1)
+                except:
+                    _, predicted = torch.max(outputs.logits, 1)
+
+                loss.backward()  # Backpropagation
+                optimizer.step()  # Update the model parameters
+
+                total_loss += loss.item() * inputs.size(0)
+                total_correct += (predicted == labels).sum().item()
+                total_samples += inputs.size(0)
+
+            average_loss = total_loss / total_samples
+            accuracy = (total_correct / total_samples) * 100.0
+
+            # Test the model
+            test_loss, test_acc = test_model(model, test_loader, criterion)
+
+            print(f'epoch={epoch}\ntrain={accuracy,average_loss}\ntest={test_acc,test_loss}')
+
+            bar.progress(epoch*2)
+
+            st.sidebar.write(f'epoch={epoch}\ntrain={accuracy,average_loss}\ntest={test_acc,test_loss}')
+
+        return model
+    
+    with open('.tmp.txt','r') as f:
+        path_=f.read()
+        if path_=='Web Cam':
+            path_='train'
+    
+    tranformer = Compose([transforms.Resize([299,299]),transforms.ToTensor()])
+
+    train_dataset = ImageFolder(f"Images/{path_}/", transform=tranformer)
+    val_dataset = ImageFolder("Images/test/", transform=tranformer)
+
+    BATCH_SIZE=len(os.listdir(f"Images/test/{os.listdir('Images/test/')[0]}"))
+
+    if BATCH_SIZE>32:
+        BATCH_SIZE=BATCH_SIZE//2
+
+    train_dataloader = DataLoader(train_dataset, shuffle=True,batch_size=BATCH_SIZE)
+    test_loader = DataLoader(val_dataset, shuffle=False,batch_size=BATCH_SIZE)
+
+    # archs = [VGG19,Inception3, ResNet18, ResNet50]
+    torch.cuda.empty_cache()
+    gc.collect()
+    model = VGG19(len(os.listdir(f'Images/{path_}')))
+    train_loader = train_dataloader
+    test_loader = test_loader
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(),lr=lr)
+    num_epochs = num_epochs
+
+    # Train and test the model
+    if 'data.pt' not in os.listdir('Artifacts/'):
+        model_=train_and_test(
+            model, train_loader, test_loader, criterion, optimizer, num_epochs)
+
+    if model_!=None and 'data.pt' not in os.listdir('Artifacts/'):
+        try:
+            torch.save(model_,'Artifacts/data.pt')
+        except:
+            model_=train_and_test(
+            model, train_loader, test_loader, criterion, optimizer, num_epochs)
+            torch.save(model_,'Artifacts/data.pt')
+
+
+    return accuracy,test_acc,average_loss, test_loss
+#------------------------------------roi------------------------------------
+
+def roi(img_array):
+    face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    face_cascade = cv2.CascadeClassifier(face_cascade_path)
+    
+    gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(
+        gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
+    )
+    if len(faces) > 0:
+        (x, y, w, h) = faces[0]
+        img_array = img_array[y : y + h, x : x + w]
+        return img_array
+
+#-----------------Inferencing DL model---------------------------
+
+tranformer2 = transforms.Compose([transforms.ToPILImage(),transforms.Resize([299,299]),transforms.ToTensor()])
+
+def Classifier(img):
+    model = torch.load("Artifacts/data.pt").eval()
+    img=roi(img)
+    img=tranformer2(img)
+    res=model((img).unsqueeze(dim=0).to('cuda'))
+    return torch.argmax(res,dim=1).to('cpu').detach().numpy(),torch.softmax(res, dim=1).to('cpu').detach().numpy()
+
+#-----------------Inferencing DL model---------------------------
+def Classifier_ml(img):
+    flatten_data=[]
+    img=roi(img)
+    img_array = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_resized = resize(img_array, (160, 160, 3))
+    flatten_data.append(img_resized.flatten())
+    model=pickle.load(open('Artifacts/data.pkl','rb'))
+    res=model.predict_proba(flatten_data)
+    return res[0]

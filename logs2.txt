@@ -1,0 +1,3 @@
+Date			Time		Input Mode		Class Size		Model's Perfomance
+2023-07-24	14:31:03	Upload		{'a': 26, 'b': 32}			79.48717948717949
+2023-07-24	14:42:27	Upload		{'a': 39, 'b': 34}			95.45454545454545

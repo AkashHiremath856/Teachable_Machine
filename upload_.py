@@ -5,6 +5,7 @@ import os
 import shutil
 from PIL import Image
 
+
 def upload(cname,k):
     """
      Upload images to class'cname'and return a list of images. This is a wrapper around st. file_uploader and does not check for errors
