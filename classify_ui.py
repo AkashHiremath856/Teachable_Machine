@@ -59,7 +59,7 @@ def log(
         # If logs. txt is not in os. listdir os. listdir logs. txt
         if "logs.txt" not in os.listdir():
             data_ = header_ + data_
-        with open("logs.txt", "a") as f:
+        with open("logs/logs.txt", "a") as f:
             f.write(data_)
 
     if ml_ != None:
@@ -68,7 +68,7 @@ def log(
         header_ = "Date\t\t\tTime\t\tInput Mode\t\tClass Size\t\tModel's Perfomance"
         if "logs2.txt" not in os.listdir():
             data_ = header_ + data_
-        with open("logs2.txt", "a") as f:
+        with open("logs/logs2.txt", "a") as f:
             f.write(data_)
 
 
