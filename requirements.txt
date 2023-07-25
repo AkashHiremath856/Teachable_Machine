@@ -7,3 +7,5 @@ torch
 facenet_pytorch
 torchvision
 pillow
+scikit-learn
+scikit-image
