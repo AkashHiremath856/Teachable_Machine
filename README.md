@@ -53,6 +53,6 @@ git clone https://github.com/AkashHiremath856/Teachable_Machine.git
 ## References
 
 <ul>
-<li><a href='https://github.com/timesler/facenet-pytorch' target="_blank">facenet-pytorch</a></li>
+<li><a href='https://pytorch.org/vision/stable/models.html' target="_blank">torchvision.models</a></li>
 <li><a href='https://github.com/whitphx/streamlit-webrtc' target="_blank">streamlit-webrtc<a></li>
 <li><a href='https://teachablemachine.withgoogle.com' target="_blank">teachablemachine</a></li>
