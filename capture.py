@@ -9,26 +9,22 @@ from PIL import Image
 import cv2
 import numpy as np
 
-# ------------------ Preprocessing ------------------#
-with open('.tmp.txt', 'r') as f:
-    path_ = f.read()
-    # path_ Web Cam train path_ train
-    if path_ == 'Web Cam':
-        path_ = 'train'
 
+# ------------------ Preprocessing ------------------#
 class preprocessing:
     def __init__(self, img_dir):
-        self.img_dir = img_dir
+        self.img_dir = "Images/train/"
         self.classes = os.listdir(self.img_dir)
-        class_names=os.listdir(img_dir)
+        class_names = os.listdir(self.img_dir)
         # Returns a list of all class names in the training image.
         if not class_names:
             class_names = os.listdir(self.img_dir)
         self.class_names = class_names
-        self.test_dir = 'Images/test/'
-        self.face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        self.test_dir = "Images/test/"
+        self.face_cascade_path = (
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        )
         self.face_cascade = cv2.CascadeClassifier(self.face_cascade_path)
-
 
     # Class balance
     def class_balance(self):
@@ -67,17 +63,13 @@ class preprocessing:
                     (x, y, w, h) = faces[0]
                     img_array = img_array[y : y + h, x : x + w]
                     cv2.imwrite(f"{self.img_dir}/{class_}/{img_}", img_array)
-                    if (
-                        os.path.getsize(f"{self.img_dir}/{class_}/{img_}") < 5000
-                        or img_array.shape[0] < 100
-                    ):
+                    if img_array.shape[0] < 100:
                         os.remove(f"{self.img_dir}/{class_}/{img_}")
-        
-        if len(os.listdir(self.img_dir+os.listdir(self.img_dir)[0]))<12:
+
+        if len(os.listdir(self.img_dir + os.listdir(self.img_dir)[0])) < 12:
             self.augment_()
         else:
             self.split_images()
-                       
 
     def split_images(self):
         # Splitting Images into train,test
@@ -147,26 +139,28 @@ class preprocessing:
             self.augment_images_in_directory(input_directory, output_directory)
         self.split_images()
 
+
 # ------------------ Capture Images ------------------#
 
 
 def cap(cname):
     """
-     Capture and store images for a class. This is a streaming function that can be used to capture and store images for a class.
+    Capture and store images for a class. This is a streaming function that can be used to capture and store images for a class.
 
-     Args:
-         cname: Name of the class. If empty the title will be printed to standard output.
+    Args:
+        cname: Name of the class. If empty the title will be printed to standard output.
 
-     Returns: 
-         A tuple of ( VideoFrame stream ) where video frame is a video stream and stream is a VideoFrame
+    Returns:
+        A tuple of ( VideoFrame stream ) where video frame is a video stream and stream is a VideoFrame
     """
     # This function will create a video frame for the given class.
     image_row = []
+    train_dir = "Images/train/"
     if cname != "":
         st.title(f"For Class {cname}")
-        w_dir = "Images/train/" + cname
+        w_dir = train_dir + cname
         # Create a directory for the training directory if it doesn t exist.
-        if 'train' in os.listdir("Images/") and cname not in os.listdir("Images/train/"):
+        if "train" in os.listdir("Images") and cname not in os.listdir(train_dir):
             os.makedirs(w_dir)
 
         def heq(img):
@@ -178,18 +172,18 @@ def cap(cname):
 
         def video_frame_callback(frame):
             """
-             Callback for VideoFrame. This is called every frame in the video. We write the frame to disk and return a VideoFrame that can be used to train the model
+            Callback for VideoFrame. This is called every frame in the video. We write the frame to disk and return a VideoFrame that can be used to train the model
 
-             Args:
-                 frame: The frame to be saved
+            Args:
+                frame: The frame to be saved
 
-             Returns: 
-                 The video frame that was saved to disk and used to train the model ( if needed ). Note that the frame is saved in bgr
+            Returns:
+                The video frame that was saved to disk and used to train the model ( if needed ). Note that the frame is saved in bgr
             """
             img = frame.to_ndarray(format="bgr24")
             tim = datetime.now().time().second
-            nam = f"Images/train/{cname}/frame_{str(tim)}.jpg"
-            img=heq(img)
+            nam = f"{train_dir}/{cname}/frame_{str(tim)}.jpg"
+            img = heq(img)
             cv2.imwrite(nam, img)
             return av.VideoFrame.from_ndarray(img, format="bgr24")
 
@@ -201,20 +195,23 @@ def cap(cname):
         # Create a row of images to be used in the post - processing wizard. This is a copy of the code that was copied from django. contrib. image. service
 
         image_row = []
-        for img in os.listdir(f'Images/train/{cname}'):
+        for img in os.listdir(f"{train_dir}/{cname}"):
             try:
-                image = Image.open(f'Images/train/{cname}/{img}')
+                image = Image.open(f"{train_dir}/{cname}/{img}")
                 # Resize the image to desired width and height
                 resized_image = image.resize((100, 100))
                 image_row.append(resized_image)
             except:
                 continue
-        if len(os.listdir(f'Images/train/{cname}')) < 8 and len(os.listdir(f'Images/train/{cname}')) >= 1:
-            st.warning('Add more images to improve models performance. ')
-        nu_ = (list(zip(image_row, range(1, len(image_row)+1))))
+        if (
+            len(os.listdir(f"{train_dir}/{cname}")) < 8
+            and len(os.listdir(f"{train_dir}/{cname}")) >= 1
+        ):
+            st.warning("Add more images to improve models performance. ")
+        nu_ = list(zip(image_row, range(1, len(image_row) + 1)))
         st.image(image_row, width=120, caption=[x[1] for x in nu_])
 
-        if os.listdir(f'Images/train/{cname}'):
-            if st.button('Clear', key=cname+'i'):
-                st.warning('Deleted Images.')
-                shutil.rmtree(f'Images/train/{cname}')
+        if os.listdir(f"{train_dir}/{cname}"):
+            if st.button("Clear", key=cname + "i"):
+                st.warning("Deleted Images.")
+                shutil.rmtree(f"{train_dir}/{cname}")

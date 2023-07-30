@@ -51,22 +51,22 @@ def tranform_image(DATA_DIR):
 
 
 def build_ml_model():
-    with open('.tmp.txt','r') as f:
-        path_=f.read()
-        if path_=='Web Cam':
-            path_='train'
-    X_train,y_train=tranform_image(f'Images/{path_}')
-    X_test,y_test=tranform_image('Images/test')
-    model = svm.SVC(C=100, class_weight=None, gamma="auto", kernel="rbf", probability=True)
-    model.fit(X_train,y_train)
-    y_pred=model.predict(X_test)
-    acc=accuracy_score(y_test,y_pred)
-    if 'data.pkl' not in os.listdir('Artifacts'):
-        pickle.dump(model,open('Artifacts/data.pkl','wb'))
-    return acc*100
+    path_ = "train"
+    X_train, y_train = tranform_image(f"Images/{path_}")
+    X_test, y_test = tranform_image("Images/test")
+    model = svm.SVC(
+        C=100, class_weight=None, gamma="auto", kernel="rbf", probability=True
+    )
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    if "data.pkl" not in os.listdir("Artifacts"):
+        pickle.dump(model, open("Artifacts/data.pkl", "wb"))
+    return acc * 100
 
 
-#------------------------------trainning DL model---------------------
+# ------------------------------trainning DL model---------------------
+
 
 class VGG19(nn.Module):
     def __init__(self, num_classes):
@@ -79,8 +79,8 @@ class VGG19(nn.Module):
         x = self.vgg19(x)
         return x
 
-def build_model(num_epochs,lr):
 
+def build_model(num_epochs, lr):
     def test_model(model, test_loader, criterion):
         model.eval()  # Set the model to evaluation mode
         device = (
@@ -108,8 +108,9 @@ def build_model(num_epochs,lr):
         accuracy = (total_correct / total_samples) * 100.0
         return average_loss, accuracy
 
-
-    def train_and_test(model, train_loader, test_loader, criterion, optimizer, num_epochs):
+    def train_and_test(
+        model, train_loader, test_loader, criterion, optimizer, num_epochs
+    ):
         device = (
             "cuda" if torch.cuda.is_available() else "cpu"
         )  # Get the device of the model parameters
@@ -120,11 +121,11 @@ def build_model(num_epochs,lr):
         global accuracy
         global epoch
 
-        #progress bar
+        # progress bar
         progress_text = "Training... Please wait."
-        bar=st.progress(0, text=progress_text)
+        bar = st.progress(0, text=progress_text)
 
-        for epoch in range(1,num_epochs+1):
+        for epoch in range(1, num_epochs + 1):
             torch.cuda.empty_cache()
             gc.collect()
             model.train()  # Set the model to training mode
@@ -168,63 +169,67 @@ def build_model(num_epochs,lr):
             # Test the model
             test_loss, test_acc = test_model(model, test_loader, criterion)
 
-            print(f'epoch={epoch}\ntrain={accuracy,average_loss}\ntest={test_acc,test_loss}')
+            print(
+                f"epoch={epoch}\ntrain={accuracy:.3f},{average_loss:.3f}\ntest={test_acc:.3f},{test_loss:.3f}"
+            )
 
-            bar.progress(epoch*2)
+            bar.progress(epoch * 2)
 
-            st.sidebar.write(f'epoch={epoch}\ntrain={accuracy,average_loss}\ntest={test_acc,test_loss}')
+            st.sidebar.write(
+                f"epoch={epoch}\ntrain={accuracy,average_loss}\ntest={test_acc,test_loss}"
+            )
 
         return model
-    
-    with open('.tmp.txt','r') as f:
-        path_=f.read()
-        if path_=='Web Cam':
-            path_='train'
-    
-    tranformer = Compose([transforms.Resize([299,299]),transforms.ToTensor()])
+
+    path_ = "train"
+
+    tranformer = Compose([transforms.Resize([299, 299]), transforms.ToTensor()])
 
     train_dataset = ImageFolder(f"Images/{path_}/", transform=tranformer)
     val_dataset = ImageFolder("Images/test/", transform=tranformer)
 
-    BATCH_SIZE=len(os.listdir(f"Images/test/{os.listdir('Images/test/')[0]}"))
+    BATCH_SIZE = len(os.listdir(f"Images/test/{os.listdir('Images/test/')[0]}"))
 
-    if BATCH_SIZE>32:
-        BATCH_SIZE=BATCH_SIZE//2
+    if BATCH_SIZE > 32:
+        BATCH_SIZE = 16
 
-    train_dataloader = DataLoader(train_dataset, shuffle=True,batch_size=BATCH_SIZE)
-    test_loader = DataLoader(val_dataset, shuffle=False,batch_size=BATCH_SIZE)
+    train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=BATCH_SIZE)
+    test_loader = DataLoader(val_dataset, shuffle=False, batch_size=BATCH_SIZE)
 
-    # archs = [VGG19,Inception3, ResNet18, ResNet50]
     torch.cuda.empty_cache()
     gc.collect()
-    model = VGG19(len(os.listdir(f'Images/{path_}')))
+    model = VGG19(len(os.listdir(f"Images/{path_}")))
     train_loader = train_dataloader
     test_loader = test_loader
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(),lr=lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     num_epochs = num_epochs
 
     # Train and test the model
-    if 'data.pt' not in os.listdir('Artifacts/'):
-        model_=train_and_test(
-            model, train_loader, test_loader, criterion, optimizer, num_epochs)
+    if "data.pt" not in os.listdir("Artifacts/"):
+        model_ = train_and_test(
+            model, train_loader, test_loader, criterion, optimizer, num_epochs
+        )
 
-    if model_!=None and 'data.pt' not in os.listdir('Artifacts/'):
+    if model_ != None and "data.pt" not in os.listdir("Artifacts/"):
         try:
-            torch.save(model_,'Artifacts/data.pt')
+            torch.save(model_, "Artifacts/data.pt")
         except:
-            model_=train_and_test(
-            model, train_loader, test_loader, criterion, optimizer, num_epochs)
-            torch.save(model_,'Artifacts/data.pt')
+            model_ = train_and_test(
+                model, train_loader, test_loader, criterion, optimizer, num_epochs
+            )
+            torch.save(model_, "Artifacts/data.pt")
+
+    return accuracy, test_acc, average_loss, test_loss
 
 
-    return accuracy,test_acc,average_loss, test_loss
-#------------------------------------roi------------------------------------
+# ------------------------------------roi------------------------------------
+
 
 def roi(img_array):
     face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
     face_cascade = cv2.CascadeClassifier(face_cascade_path)
-    
+
     gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(
         gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
@@ -234,24 +239,32 @@ def roi(img_array):
         img_array = img_array[y : y + h, x : x + w]
         return img_array
 
-#-----------------Inferencing DL model---------------------------
 
-tranformer2 = transforms.Compose([transforms.ToPILImage(),transforms.Resize([299,299]),transforms.ToTensor()])
+# -----------------Inferencing DL model---------------------------
+
+tranformer2 = transforms.Compose(
+    [transforms.ToPILImage(), transforms.Resize([299, 299]), transforms.ToTensor()]
+)
+
 
 def Classifier(img):
     model = torch.load("Artifacts/data.pt").eval()
-    img=roi(img)
-    img=tranformer2(img)
-    res=model((img).unsqueeze(dim=0).to('cuda'))
-    return torch.argmax(res,dim=1).to('cpu').detach().numpy(),torch.softmax(res, dim=1).to('cpu').detach().numpy()
+    img = tranformer2(img)
+    res = model((img).unsqueeze(dim=0).to("cuda"))
+    return (
+        torch.argmax(res, dim=1).to("cpu").detach().numpy(),
+        torch.softmax(res, dim=1).to("cpu").detach().numpy(),
+    )
 
-#-----------------Inferencing DL model---------------------------
+
+# -----------------Inferencing DL model---------------------------
 def Classifier_ml(img):
-    flatten_data=[]
-    img=roi(img)
+    flatten_data = []
     img_array = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_array = roi(img_array)
+    img_array = heq(img_array)
     img_resized = resize(img_array, (160, 160, 3))
     flatten_data.append(img_resized.flatten())
-    model=pickle.load(open('Artifacts/data.pkl','rb'))
-    res=model.predict_proba(flatten_data)
+    model = pickle.load(open("Artifacts/data.pkl", "rb"))
+    res = model.predict_proba(flatten_data)
     return res[0]

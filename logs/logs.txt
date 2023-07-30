@@ -1,2 +1,2 @@
-Date			Time		Input Mode		Epochs,LR			Class Size		Model's Perfomance
-2023-07-24	14:51:37	Upload			[10,0.01]				{'a': 39, 'b': 34}		79.45205479452055, 72.72727272727273, 0.48877984856906004, 0.4544356289235028
+Date			Time		Epochs,LR			Class Size		Model's Perfomance
+2023-07-30	02:47:43			[10,0.001]				{'A': 14, 'B': 14}		100.000, 80.000, 0.185, 0.464
