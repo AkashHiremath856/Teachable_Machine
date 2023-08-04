@@ -9,3 +9,4 @@ torchvision
 pillow
 scikit-learn
 scikit-image
+bing-image-downloader
