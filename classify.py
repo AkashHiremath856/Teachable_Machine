@@ -18,11 +18,17 @@ import pickle
 
 # ----------------------ML model trainning--------------------------------
 def heq(img):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # _Convert_to_HSV_colorspace
-    hsv[:, :, 2] = cv2.equalizeHist(hsv[:, :, 2])
-    Meq_color = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
-    return Meq_color
+    try:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # _Convert_to_HSV_colorspace
+        hsv[:, :, 2] = cv2.equalizeHist(hsv[:, :, 2])
+        Meq_color = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+        hsv = cv2.cvtColor(Meq_color, cv2.COLOR_BGR2HSV)  # _Convert_to_HSV_colorspace
+        hsv[:, :, 2] = cv2.equalizeHist(hsv[:, :, 2])
+        Meq_color = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+        return Meq_color
+    except:
+        return img
 
 
 def tranform_image(DATA_DIR):
@@ -59,13 +65,63 @@ def build_ml_model():
     )
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
+    train_acc = accuracy_score(model.predict(X_train), y_train)
     acc = accuracy_score(y_test, y_pred)
     if "data.pkl" not in os.listdir("Artifacts"):
         pickle.dump(model, open("Artifacts/data.pkl", "wb"))
-    return acc * 100
+    return f"{train_acc*100:.3f}, {acc * 100:.3f}"
 
 
 # ------------------------------trainning DL model---------------------
+class ResNet50(nn.Module):
+    def __init__(self, num_classes):
+        super(ResNet50, self).__init__()
+        self.resnet = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
+        num_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(num_features, num_classes)
+
+    def forward(self, x):
+        x = self.resnet(x)
+        return x
+
+
+class Inception_3(nn.Module):
+    def __init__(self, num_classes):
+        super(Inception_3, self).__init__()
+        self.Inception = models.Inception3(
+            init_weights=models.Inception_V3_Weights.IMAGENET1K_V1,
+            num_classes=num_classes,
+        )
+        num_features = self.Inception.fc.in_features
+        self.Inception.fc = nn.Linear(num_features, num_classes)
+
+    def forward(self, x):
+        x = self.Inception(x)
+        return x
+
+
+class ResNet18(nn.Module):
+    def __init__(self, num_classes):
+        super(ResNet18, self).__init__()
+        self.resnet = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+        num_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(num_features, num_classes)
+
+    def forward(self, x):
+        x = self.resnet(x)
+        return x
+
+
+class VGG16(nn.Module):
+    def __init__(self, num_classes):
+        super(VGG16, self).__init__()
+        self.vgg16 = models.vgg16(weights=models.vgg.VGG16_Weights.DEFAULT)
+        num_features = self.vgg16.classifier[6].in_features
+        self.vgg16.classifier[6] = nn.Linear(num_features, num_classes)
+
+    def forward(self, x):
+        x = self.vgg16(x)
+        return x
 
 
 class VGG19(nn.Module):
@@ -80,7 +136,7 @@ class VGG19(nn.Module):
         return x
 
 
-def build_model(num_epochs, lr):
+def build_model(num_epochs, lr, arch_, optim):
     def test_model(model, test_loader, criterion):
         model.eval()  # Set the model to evaluation mode
         device = (
@@ -169,15 +225,16 @@ def build_model(num_epochs, lr):
             # Test the model
             test_loss, test_acc = test_model(model, test_loader, criterion)
 
-            print(
-                f"epoch={epoch}\ntrain={accuracy:.3f},{average_loss:.3f}\ntest={test_acc:.3f},{test_loss:.3f}"
-            )
+            if epoch%5==0:
+                print(
+                    f"epoch={epoch}\ntrain={accuracy:.3f},{average_loss:.3f}\ntest={test_acc:.3f},{test_loss:.3f}"
+                )
 
             bar.progress(epoch * 2)
 
-            st.sidebar.write(
-                f"epoch={epoch}\ntrain={accuracy,average_loss}\ntest={test_acc,test_loss}"
-            )
+        st.sidebar.write(
+            f"epoch={epoch}\ntrain={accuracy,average_loss}\ntest={test_acc,test_loss}"
+        )
 
         return model
 
@@ -198,11 +255,24 @@ def build_model(num_epochs, lr):
 
     torch.cuda.empty_cache()
     gc.collect()
-    model = VGG19(len(os.listdir(f"Images/{path_}")))
+    archs = {
+        "VGG19": VGG19,
+        "VGG16": VGG16,
+        "Inception_3": Inception_3,
+        "ResNet50": ResNet50,
+        "ResNet18": ResNet18,
+    }
+    arch = archs[arch_]
+    model = arch(len(os.listdir(f"Images/{path_}")))
     train_loader = train_dataloader
     test_loader = test_loader
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    optims = {
+        "Adam": torch.optim.Adam(model.parameters(), lr=lr),
+        "SGD": torch.optim.SGD(model.parameters(), lr=lr),
+    }
+    optim_ = optims[optim]
+    optimizer = optim_
     num_epochs = num_epochs
 
     # Train and test the model
@@ -224,8 +294,6 @@ def build_model(num_epochs, lr):
 
 
 # ------------------------------------roi------------------------------------
-
-
 def roi(img_array):
     face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
     face_cascade = cv2.CascadeClassifier(face_cascade_path)
@@ -260,9 +328,8 @@ def Classifier(img):
 # -----------------Inferencing DL model---------------------------
 def Classifier_ml(img):
     flatten_data = []
-    img_array = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_array = heq(img)
     img_array = roi(img_array)
-    img_array = heq(img_array)
     img_resized = resize(img_array, (160, 160, 3))
     flatten_data.append(img_resized.flatten())
     model = pickle.load(open("Artifacts/data.pkl", "rb"))

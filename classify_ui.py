@@ -4,13 +4,13 @@ import matplotlib.pyplot as plt
 import os
 from classify import Classifier, build_model, build_ml_model, Classifier_ml, roi
 import threading
-from PIL import Image
 import datetime
 import shutil
 import torch
 import cv2
 import gc
 import numpy as np
+import pandas as pd
 
 
 def log(
@@ -21,6 +21,8 @@ def log(
     test_acc=None,
     average_loss=None,
     test_loss=None,
+    arch=None,
+    optim=None,
     ml_=None,
 ):
     """
@@ -46,10 +48,10 @@ def log(
     date_time_ = f"\n{datetime.date.today()}\t{datetime.datetime.now().replace(microsecond=0).strftime('%H:%M:%S')}"
 
     if ml_ == None:
-        perf_ = f"{accuracy:.3f}, {test_acc:.3f}, {average_loss:.3f}, {test_loss:.3f}"
+        perf_ = f"{arch},{optim},{accuracy:.3f}, {test_acc:.3f}, {average_loss:.3f}, {test_loss:.3f}"
         model_params_ = f"\t\t\t[{num_epochs},{lr}]\t\t"
         data_ = date_time_ + model_params_ + tree_ + "\t\t" + perf_
-        header_ = "Date\t\t\tTime\t\tEpochs,LR\t\t\tClass Size\t\tModel's Perfomance"
+        header_ = "Date\t\t\tTime\t\tArch,Optim,Epochs,LR\t\t\tClass Size\t\tModel's Perfomance"
         # If logs. txt is not in os. listdir os. listdir logs. txt
         if "logs.txt" not in os.listdir("logs/"):
             data_ = header_ + data_
@@ -57,7 +59,7 @@ def log(
             f.write(data_)
 
     if ml_ != None:
-        perf_ml_ = f"{ml_:.3f}"
+        perf_ml_ = ml_
         data_ = date_time_ + tree_ + "\t\t\t" + perf_ml_
         header_ = "Date\t\t\tTime\t\tClass Size\t\tModel's Perfomance"
         if "logs2.txt" not in os.listdir("logs/"):
@@ -267,20 +269,22 @@ def get_model():
                 tree_tr[class_] = len(os.listdir(f"Images/{path_}/{class_}"))
             for class_ in classes:
                 tree_te[class_] = len(os.listdir(f"Images/test/{class_}"))
-            st.title(f"Train Model on Classes : {tree_tr}, Test data : {tree_te}")
+            st.title(f"Train Model on Classes : ")
+            st.sidebar.table(
+                pd.DataFrame({"Train data": tree_tr, "Test data": tree_te})
+            )
             st.caption(
                 """ML - Using SVC
-                with C=100, class_weight=None, gamma="auto", kernel="rbf", probability=True.
-                \nDL - Using VGG19 Transfer learning with criterion = CrossEntropyLoss, optimizer = SGD."""
+                with C=100, class_weight=None, gamma="auto", kernel="rbf", probability=True.."""
             )
-            st.text("Set Parameters")
-
             # User parameters
-            num_epochs = st.select_slider("Epochs", range(10, 100, 10))
-            lr = st.select_slider("Learning Rate", [0.0001, 0.001, 0.01, 0.1, 1])
-            st.caption(
-                "Note: The higher `Epochs` value, Consumes more time and resources,\nbut will have positive impact on DL model's Accuracy."
+            arch = st.selectbox(
+                "Select Architecture",
+                ("Inception_3", "ResNet18", "ResNet50", "VGG16", "VGG19"),
             )
+            optim = st.selectbox("Select Optimizer", ("Adam", "SGD"))
+            num_epochs = st.number_input("Epochs", 10, 100, step=10)
+            lr = st.select_slider("Learning Rate", [0.0001, 0.001, 0.01, 0.1, 1])
             # Train the model and log the training data.
             if st.button("Train", key="dl"):
                 gc.collect()
@@ -290,7 +294,7 @@ def get_model():
                     log(classes=classes, ml_=ml_acc)
                 torch.cuda.empty_cache()
                 accuracy, test_acc, average_loss, test_loss = build_model(
-                    num_epochs, lr
+                    num_epochs, lr, arch, optim
                 )  # Train
                 log(
                     classes,
@@ -300,4 +304,6 @@ def get_model():
                     test_acc,
                     average_loss,
                     test_loss,
+                    arch,
+                    optim,
                 )  # log fn

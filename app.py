@@ -35,7 +35,7 @@ def reset(ky="default", i=0):
         except:
             pass
         try:
-            shutil.rmtree("Images/test") and os.mkdir("Images/test")
+            shutil.rmtree("Images/test")
         except:
             pass
         try:
@@ -43,7 +43,7 @@ def reset(ky="default", i=0):
         except:
             pass
         try:
-            shutil.rmtree("Images/train") and os.mkdir("Images/train")
+            shutil.rmtree("Images/train")
         except:
             pass
         try:
@@ -152,17 +152,18 @@ class home_page:
                                 output_dir=self.w_dir,
                                 verbose=False,
                             )
-                for names in self.classes:
-                    image_row = []
-                    imgs = os.listdir(self.w_dir + names)
-                    # resize the images to 100 pixels
-                    for img in imgs:
-                        image = Image.open(self.w_dir + names + "/" + img)
-                        resized_image = image.resize((100, 100))
-                        image_row.append(resized_image)
-                    nu_ = list(zip(image_row, range(1, len(image_row) + 1)))
-                    st.title(f"Class {names}")
-                    st.image(image_row, width=120, caption=[x[1] for x in nu_])
+                        for names in self.classes:
+                            image_row = []
+                            os.makedirs
+                            imgs = os.listdir(self.w_dir + names)
+                            # resize the images to 100 pixels
+                            for img in imgs:
+                                image = Image.open(self.w_dir + names + "/" + img)
+                                resized_image = image.resize((100, 100))
+                                image_row.append(resized_image)
+                            nu_ = list(zip(image_row, range(1, len(image_row) + 1)))
+                            st.title(f"Class {names}")
+                            st.image(image_row, width=120, caption=[x[1] for x in nu_])
 
             # Preprocessing and Train Button
             # This function is called when the sidebar button is pressed.
@@ -173,12 +174,11 @@ class home_page:
                 if "test" not in os.listdir(self.img_dir):
                     # This function is called when the button is clicked.
                     if st.sidebar.button("Next", key="Next-btn"):
-                        obj2 = preprocessing(self.w_dir)
+                        obj2 = preprocessing()
                         obj2.class_balance()
-                        st.sidebar.info("Preprocessing...Done!", icon="ℹ️")
-                if "test" in os.listdir("Images"):
-                    if st.sidebar.button("Train"):
-                        state.page = "train"
+                        st.toast("Preprocessing...Done!", icon="ℹ️")
+                        if "test" in os.listdir("Images"):
+                            state.page = "train"
 
     def train_page(self):
         get_model()

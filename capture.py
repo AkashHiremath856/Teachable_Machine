@@ -12,7 +12,7 @@ import numpy as np
 
 # ------------------ Preprocessing ------------------#
 class preprocessing:
-    def __init__(self, img_dir):
+    def __init__(self):
         self.img_dir = "Images/train/"
         self.classes = os.listdir(self.img_dir)
         class_names = os.listdir(self.img_dir)
@@ -163,13 +163,6 @@ def cap(cname):
         if "train" in os.listdir("Images") and cname not in os.listdir(train_dir):
             os.makedirs(w_dir)
 
-        def heq(img):
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # _Convert_to_HSV_colorspace
-            hsv[:, :, 2] = cv2.equalizeHist(hsv[:, :, 2])
-            Meq_color = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
-            return Meq_color
-
         def video_frame_callback(frame):
             """
             Callback for VideoFrame. This is called every frame in the video. We write the frame to disk and return a VideoFrame that can be used to train the model
@@ -183,7 +176,6 @@ def cap(cname):
             img = frame.to_ndarray(format="bgr24")
             tim = datetime.now().time().second
             nam = f"{train_dir}/{cname}/frame_{str(tim)}.jpg"
-            img = heq(img)
             cv2.imwrite(nam, img)
             return av.VideoFrame.from_ndarray(img, format="bgr24")
 
