@@ -36,7 +36,7 @@ def tranform_image(DATA_DIR):
     images = []
     flatten_data = []
 
-    CATEGORIES = os.listdir(DATA_DIR)
+    CATEGORIES = sorted(os.listdir(DATA_DIR))
 
     for categories in CATEGORIES:
         class_num = CATEGORIES.index(categories)  # label encoding
@@ -225,7 +225,7 @@ def build_model(num_epochs, lr, arch_, optim):
             # Test the model
             test_loss, test_acc = test_model(model, test_loader, criterion)
 
-            if epoch%5==0:
+            if epoch % 5 == 0:
                 print(
                     f"epoch={epoch}\ntrain={accuracy:.3f},{average_loss:.3f}\ntest={test_acc:.3f},{test_loss:.3f}"
                 )
@@ -329,9 +329,16 @@ def Classifier(img):
 def Classifier_ml(img):
     flatten_data = []
     img_array = heq(img)
-    img_array = roi(img_array)
-    img_resized = resize(img_array, (160, 160, 3))
-    flatten_data.append(img_resized.flatten())
-    model = pickle.load(open("Artifacts/data.pkl", "rb"))
-    res = model.predict_proba(flatten_data)
-    return res[0]
+    img_roi = roi(img_array)
+    try:
+        img_resized = resize(img_roi, (160, 160, 3))
+        flatten_data.append(img_resized.flatten())
+        model = pickle.load(open("Artifacts/data.pkl", "rb"))
+        res = model.predict_proba(flatten_data)
+        return res[0]
+    except:
+        img_resized = resize(img_array, (160, 160, 3))
+        flatten_data.append(img_resized.flatten())
+        model = pickle.load(open("Artifacts/data.pkl", "rb"))
+        res = model.predict_proba(flatten_data)
+        return res[0]

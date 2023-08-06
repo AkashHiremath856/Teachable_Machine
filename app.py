@@ -31,7 +31,11 @@ def reset(ky="default", i=0):
         st.cache_data.clear()
 
         try:
-            os.remove("Artifacts/data.pt") and os.remove("Artifacts/data.pkl")
+            os.remove("Artifacts/data.pt")
+        except:
+            pass
+        try:
+            os.remove("Artifacts/data.pkl")
         except:
             pass
         try:
@@ -168,7 +172,7 @@ class home_page:
             # Preprocessing and Train Button
             # This function is called when the sidebar button is pressed.
             if (
-                sorted(self.classes) == os.listdir(self.w_dir)
+                sorted(self.classes) == sorted(os.listdir(self.w_dir))
                 and os.listdir(f"{self.w_dir}/{self.classes[-1]}") != []
             ):
                 if "test" not in os.listdir(self.img_dir):
