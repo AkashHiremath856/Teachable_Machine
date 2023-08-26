@@ -172,7 +172,8 @@ class home_page:
             # Preprocessing and Train Button
             # This function is called when the sidebar button is pressed.
             if (
-                sorted(self.classes) == sorted(os.listdir(self.w_dir))
+                "train" in os.listdir(self.img_dir)
+                and sorted(self.classes) == sorted(os.listdir(self.w_dir))
                 and os.listdir(f"{self.w_dir}/{self.classes[-1]}") != []
             ):
                 if "test" not in os.listdir(self.img_dir):
