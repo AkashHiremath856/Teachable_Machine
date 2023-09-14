@@ -110,8 +110,8 @@ def inference():
         choice_ml_dl = st.radio(
             label="Choose",
             options=[
-                f"Using DL (epochs-train-test-acc-loss: {dl_acc}",
-                f"Using ML(Acc - {ml_acc})",
+                f"Using DL (Arch-{dl_acc.split(',')[0]}, Optim-{dl_acc.split(',')[1]},train_acc{dl_acc.split(',')[2]}, test_acc-{dl_acc.split(',')[3]}, train_loss-{dl_acc.split(',')[4]}, test_loss-{dl_acc.split(',')[5]})",
+                f"Using ML(Train_Acc-{ml_acc.split(',')[0]}, Test_Acc-{ml_acc.split(',')[1]})",
             ],
             key="Using Cam",
         )
@@ -129,7 +129,10 @@ def inference():
             if img is not None:
                 torch.cuda.empty_cache()  # Clear's gpu cache
 
-                if choice_ml_dl == f"Using DL (epochs-train-test-acc-loss: {dl_acc}":
+                if (
+                    choice_ml_dl
+                    == f"Using DL (Arch-{dl_acc.split(',')[0]}, Optim-{dl_acc.split(',')[1]},train_acc{dl_acc.split(',')[2]}, test_acc-{dl_acc.split(',')[3]}, train_loss-{dl_acc.split(',')[4]}, test_loss-{dl_acc.split(',')[5]})",
+                ):
                     img = roi(img)
                     if None in img:
                         continue
@@ -148,7 +151,10 @@ def inference():
                         )
                         fig_place.pyplot(fig)
 
-                if choice_ml_dl == f"Using ML(Acc - {ml_acc})":
+                if (
+                    choice_ml_dl
+                    == f"Using ML(Train_Acc-{ml_acc.split(',')[0]}, Test_Acc-{ml_acc.split(',')[1]})"
+                ):
                     img = roi(img)
                     if None in img:
                         continue
@@ -201,18 +207,24 @@ def inference():
                 choice_ml_dl = st.radio(
                     label="Choose",
                     options=[
-                        f"Using DL (epochs-train-test-acc-loss: {dl_acc}",
-                        f"Using ML(Acc - {ml_acc})",
+                        f"Using DL (Arch-{dl_acc.split(',')[0]}, Optim-{dl_acc.split(',')[1]},train_acc{dl_acc.split(',')[2]}, test_acc-{dl_acc.split(',')[3]}, train_loss-{dl_acc.split(',')[4]}, test_loss-{dl_acc.split(',')[5]})",
+                        f"Using ML(Train_Acc-{ml_acc.split(',')[0]}, Test_Acc-{ml_acc.split(',')[1]})",
                     ],
                     key="Using upload",
                 )
 
-                if choice_ml_dl == f"Using DL (epochs-train-test-acc-loss: {dl_acc}":
+                if (
+                    choice_ml_dl
+                    == f"Using DL (Arch-{dl_acc.split(',')[0]}, Optim-{dl_acc.split(',')[1]},train_acc{dl_acc.split(',')[2]}, test_acc-{dl_acc.split(',')[3]}, train_loss-{dl_acc.split(',')[4]}, test_loss-{dl_acc.split(',')[5]})"
+                ):
                     for img in images:
                         res = Classifier(img)
                         acc = f"({max(res[1][0]):.5f})"
                         preds.append(f"{classes[int(res[0])]}{acc}")
-                if choice_ml_dl == f"Using ML(Acc - {ml_acc})":
+                if (
+                    choice_ml_dl
+                    == f"Using ML(Train_Acc-{ml_acc.split(',')[0]}, Test_Acc-{ml_acc.split(',')[1]})"
+                ):
                     for img in images:
                         res = Classifier_ml(img)
                         acc = f"({max(res):.5f})"

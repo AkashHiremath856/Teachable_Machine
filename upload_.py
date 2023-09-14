@@ -50,7 +50,7 @@ def upload(cname, k):
         image_row.append(resized_image)
 
     # Add more images to improve models performance.
-    if len(os.listdir(w_dir + cname)) < 16 and len(os.listdir(w_dir + cname)) >= 1:
+    if len(os.listdir(w_dir + cname)) < 8 and len(os.listdir(w_dir + cname)) >= 1:
         st.warning("Add more images to improve models performance. ")
     nu_ = list(zip(image_row, range(1, len(image_row) + 1)))
     st.image(image_row, width=120, caption=[x[1] for x in nu_])
