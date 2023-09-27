@@ -20,7 +20,17 @@ Teachable Machine provides an intuitive and user-friendly way to create machine 
 
 ## Features
 
-- **Image Classification**: Train a model to recognize and classify different objects or concepts in images.
+- **Image Classification**: Train a model to recognize and classify different face iamges.
+
+## Interface
+
+<img src="https://github.com/AkashHiremath856/Teachable_Machine_For_Facial_Recognition/blob/main/archives/1.jpg"/><br>
+<img src="https://github.com/AkashHiremath856/Teachable_Machine_For_Facial_Recognition/blob/main/archives/2.jpg"/><br>
+<img src="https://github.com/AkashHiremath856/Teachable_Machine_For_Facial_Recognition/blob/main/archives/3.jpg"/><br>
+<img src="https://github.com/AkashHiremath856/Teachable_Machine_For_Facial_Recognition/blob/main/archives/4.jpg"/><br>
+<img src="https://github.com/AkashHiremath856/Teachable_Machine_For_Facial_Recognition/blob/main/archives/5.jpg"/><br>
+<img src="https://github.com/AkashHiremath856/Teachable_Machine_For_Facial_Recognition/blob/main/archives/6.jpg"/><br>
+
 
 ## Installation
 
